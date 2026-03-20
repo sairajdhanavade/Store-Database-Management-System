@@ -118,12 +118,15 @@ select `month`, sum(revenue) as total_sale from monthly
 group by `month`;
 
 -- • Identify Top-Selling Product per Category 
-select ca.category_name,sum(quntity)as total_number_product_sells from order_items as oi
+with d_ranks as
+(select ca.category_name,p.product_name,sum(quntity)as total_product_sell,
+dense_rank() over(partition by category_name order by sum(quntity) desc) as d_rank
+from order_items as oi
 inner join products as p on p.product_id = oi.product_id
 inner join categories as ca on ca.category_id = p.category_id
-group by ca.category_name
-order by total_number_product_sells desc
-limit 1;
+group by p.product_name)
+select category_name,product_name,total_product_sell from d_ranks 
+where d_rank = 1;
 
 -- • List of Products with Running Total of Sales 
 with sales as
